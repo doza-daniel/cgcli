@@ -1,9 +1,33 @@
 package main
 
-import "github.com/urfave/cli"
+import (
+	"fmt"
+
+	"github.com/doza-daniel/cgcli/cgc"
+	"github.com/urfave/cli"
+)
 
 var filesCmd = cli.Command{Name: "files"}
-var filesListCmd = cli.Command{Name: "list"}
+
+var filesListCmd = cli.Command{
+	Name: "list",
+	Action: func(c *cli.Context) error {
+		token := c.GlobalString(tokenFlag.Name)
+		projectID := c.String(projectFlag.Name)
+
+		client := cgc.New(token)
+		files, err := client.Files(projectID)
+		if err != nil {
+			return err
+		}
+
+		for _, file := range files {
+			fmt.Println(file.Name, file.ID)
+		}
+		return nil
+	},
+}
+
 var filesUpdateCmd = cli.Command{Name: "update"}
 var filesStatCmd = cli.Command{Name: "stat"}
 var filesDownloadCmd = cli.Command{Name: "download"}
