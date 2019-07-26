@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/doza-daniel/cgcli/cgc"
 	"github.com/urfave/cli"
@@ -29,7 +31,25 @@ var filesListCmd = cli.Command{
 }
 
 var filesUpdateCmd = cli.Command{Name: "update"}
-var filesStatCmd = cli.Command{Name: "stat"}
+var filesStatCmd = cli.Command{
+	Name: "stat",
+	Action: func(c *cli.Context) error {
+		token := c.GlobalString(tokenFlag.Name)
+		fileID := c.String(fileFlag.Name)
+
+		client := cgc.New(token)
+		file, err := client.StatFile(fileID)
+		if err != nil {
+			return err
+		}
+
+		if err := json.NewEncoder(os.Stdout).Encode(file); err != nil {
+			return err
+		}
+
+		return nil
+	},
+}
 var filesDownloadCmd = cli.Command{Name: "download"}
 
 var projectFlag = cli.StringFlag{Name: "project"}
