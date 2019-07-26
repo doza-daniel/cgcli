@@ -3,7 +3,6 @@ package cgc
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 )
 
 // Project ...
@@ -18,21 +17,11 @@ func (c Client) Projects() ([]Project, error) {
 	u := mustParseURL(c.baseURL)
 	u.Path += "projects"
 
-	req, err := http.NewRequest(http.MethodGet, u.String(), nil)
+	resp, err := c.get(u)
 	if err != nil {
-		return nil, fmt.Errorf("creating projects request failed: %s", err.Error())
+		return nil, fmt.Errorf("fetching files failed: %s", err.Error())
 	}
-	req.Header.Add(tokenHeader, c.token)
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("projects request failed: %s", err.Error())
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("status code: %d, message: %s", resp.StatusCode, decodeError(resp.Body))
-	}
+	defer resp.Close()
 
 	// TODO: paging
 	var respJSON struct {
@@ -44,7 +33,7 @@ func (c Client) Projects() ([]Project, error) {
 			Method string `json:"method"`
 		} `json:"links"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&respJSON); err != nil {
+	if err := json.NewDecoder(resp).Decode(&respJSON); err != nil {
 		return nil, fmt.Errorf("unmarshalling response failed: %s", err.Error())
 	}
 
