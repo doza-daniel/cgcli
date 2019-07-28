@@ -46,3 +46,23 @@ func (c Client) get(u *url.URL) (io.ReadCloser, error) {
 
 	return resp.Body, nil
 }
+
+func (c Client) request(method string, u *url.URL, body io.Reader) (io.ReadCloser, error) {
+	req, err := http.NewRequest(method, u.String(), body)
+	if err != nil {
+		return nil, fmt.Errorf("creating request failed: %s", err.Error())
+	}
+	req.Header.Add(tokenHeader, c.token)
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %s", err.Error())
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("status code: %d, message: %s", resp.StatusCode, decodeError(resp.Body))
+	}
+
+	return resp.Body, nil
+}
