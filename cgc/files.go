@@ -49,20 +49,15 @@ func (c Client) Files(projectID string) ([]File, error) {
 	defer resp.Close()
 
 	// TODO: paging
-	var respJSON struct {
-		Href  string `json:"href"`
+	var r struct {
+		apiOKResponseTemplate
 		Items []File `json:"items"`
-		Links []struct {
-			Href   string `json:"href"`
-			Rel    string `json:"rel"`
-			Method string `json:"method"`
-		} `json:"links"`
 	}
-	if err := json.NewDecoder(resp).Decode(&respJSON); err != nil {
+	if err := json.NewDecoder(resp).Decode(&r); err != nil {
 		return nil, fmt.Errorf("unmarshalling response failed: %s", err.Error())
 	}
 
-	return respJSON.Items, nil
+	return r.Items, nil
 }
 
 // StatFile ...
@@ -115,14 +110,14 @@ func (c Client) DownloadFile(fileID, dest string) error {
 	}
 	defer resp.Close()
 
-	var respJSON struct {
+	var r struct {
 		URL string `json:"url"`
 	}
-	if err := json.NewDecoder(resp).Decode(&respJSON); err != nil {
+	if err := json.NewDecoder(resp).Decode(&r); err != nil {
 		return fmt.Errorf("unmarshalling response failed: %s", err.Error())
 	}
 
-	file, err := c.request(http.MethodGet, mustParseURL(respJSON.URL), nil)
+	file, err := c.request(http.MethodGet, mustParseURL(r.URL), nil)
 	if err != nil {
 		return fmt.Errorf("download link failed: %s", err.Error())
 	}
