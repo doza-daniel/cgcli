@@ -3,6 +3,7 @@ package cgc
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 )
 
 // Project ...
@@ -17,7 +18,7 @@ func (c Client) Projects() ([]Project, error) {
 	u := mustParseURL(c.baseURL)
 	u.Path += "projects"
 
-	resp, err := c.get(u)
+	resp, err := c.request(http.MethodGet, u, nil)
 	if err != nil {
 		return nil, fmt.Errorf("fetching files failed: %s", err.Error())
 	}

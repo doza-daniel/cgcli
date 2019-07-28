@@ -40,7 +40,7 @@ func (c Client) Files(projectID string) ([]File, error) {
 	params.Add("project", projectID)
 	u.RawQuery = params.Encode()
 
-	resp, err := c.get(u)
+	resp, err := c.request(http.MethodGet, u, nil)
 	if err != nil {
 		return nil, fmt.Errorf("fetching files failed: %s", err.Error())
 	}
@@ -67,7 +67,7 @@ func (c Client) Files(projectID string) ([]File, error) {
 func (c Client) StatFile(fileID string) (File, error) {
 	u := mustParseURL(c.baseURL)
 	u.Path += fmt.Sprintf("files/%s", fileID)
-	resp, err := c.get(u)
+	resp, err := c.request(http.MethodGet, u, nil)
 	if err != nil {
 		return File{}, fmt.Errorf("fetching file details failed: %s", err.Error())
 	}
