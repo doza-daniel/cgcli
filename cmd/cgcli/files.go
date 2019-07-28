@@ -30,7 +30,22 @@ var filesListCmd = cli.Command{
 	},
 }
 
-var filesUpdateCmd = cli.Command{Name: "update"}
+var filesUpdateCmd = cli.Command{
+	Name: "update",
+	Action: func(c *cli.Context) error {
+
+		token := c.GlobalString(tokenFlag.Name)
+		fileID := c.String(fileFlag.Name)
+
+		client := cgc.New(token)
+		err := client.UpdateFile(fileID, c.Args())
+		if err != nil {
+			return err
+		}
+		return nil
+	},
+}
+
 var filesStatCmd = cli.Command{
 	Name: "stat",
 	Action: func(c *cli.Context) error {
