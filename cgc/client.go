@@ -12,6 +12,10 @@ const (
 	baseURL     = "https://cgc-api.sbgenomics.com/v2/"
 )
 
+type apiErrorResponseTemplate struct {
+	Message string `json:"message"`
+}
+
 type apiOKResponseTemplate struct {
 	Href  string `json:"href"`
 	Links []struct {

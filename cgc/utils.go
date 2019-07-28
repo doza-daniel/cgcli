@@ -8,13 +8,11 @@ import (
 )
 
 func decodeError(r io.Reader) error {
-	var respJSON struct {
-		Message string `json:"message"`
-	}
-	if err := json.NewDecoder(r).Decode(&respJSON); err != nil {
+	var resp apiErrorResponseTemplate
+	if err := json.NewDecoder(r).Decode(&resp); err != nil {
 		return fmt.Errorf("unmarshalling error response failed: %s", err.Error())
 	}
-	return fmt.Errorf("%s", respJSON.Message)
+	return fmt.Errorf("%s", resp.Message)
 }
 
 func mustParseURL(s string) *url.URL {
