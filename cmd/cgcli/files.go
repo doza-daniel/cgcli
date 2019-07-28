@@ -65,7 +65,17 @@ var filesStatCmd = cli.Command{
 		return nil
 	},
 }
-var filesDownloadCmd = cli.Command{Name: "download"}
+var filesDownloadCmd = cli.Command{
+	Name: "download",
+	Action: func(c *cli.Context) error {
+		token := c.GlobalString(tokenFlag.Name)
+		dest := c.String(destFlag.Name)
+		fileID := c.String(fileFlag.Name)
+
+		client := cgc.New(token)
+		return client.DownloadFile(fileID, dest)
+	},
+}
 
 var projectFlag = cli.StringFlag{Name: "project"}
 var fileFlag = cli.StringFlag{Name: "file"}
