@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -98,6 +100,42 @@ func (c Client) UpdateFile(fileID string, updates []string) error {
 			return fmt.Errorf("updating file failed: %s", err)
 		}
 		defer resp.Close()
+	}
+
+	return nil
+}
+
+// DownloadFile ...
+func (c Client) DownloadFile(fileID, dest string) error {
+	u := mustParseURL(c.baseURL)
+	u.Path += fmt.Sprintf("files/%s/download_info", fileID)
+	resp, err := c.request(http.MethodGet, u, nil)
+	if err != nil {
+		return fmt.Errorf("fetching file details failed: %s", err.Error())
+	}
+	defer resp.Close()
+
+	var respJSON struct {
+		URL string `json:"url"`
+	}
+	if err := json.NewDecoder(resp).Decode(&respJSON); err != nil {
+		return fmt.Errorf("unmarshalling response failed: %s", err.Error())
+	}
+
+	file, err := c.request(http.MethodGet, mustParseURL(respJSON.URL), nil)
+	if err != nil {
+		return fmt.Errorf("download link failed: %s", err.Error())
+	}
+	defer file.Close()
+
+	destf, err := os.Create(dest)
+	if err != nil {
+		return fmt.Errorf("creating '%s' file failed: %s", dest, err.Error())
+	}
+
+	io.Copy(destf, file)
+	if err := destf.Sync(); err != nil {
+		return fmt.Errorf("syncing '%s' file failed: %s", dest, err.Error())
 	}
 
 	return nil
