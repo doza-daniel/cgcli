@@ -1,9 +1,13 @@
 package cgc
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -24,55 +28,8 @@ type File struct {
 	Origin struct {
 		Dataset string `json:"dataset"`
 	} `json:"origin"`
-	Tags     []string `json:"tags"`
-	Metadata metadata `json:"metadata"`
-}
-
-type metadata struct {
-	metadataCategoryFile
-	metadataCategorySample
-	metadataCategoryAliquot
-	metadataCategoryCase
-	metadataCategoryGeneral
-}
-
-type metadataCategoryFile struct {
-	LibraryID            string `json:"library_id"`
-	Platform             string `json:"platform"`
-	PlatformUnitID       string `json:"platform_unit_id"`
-	PairedEnd            string `json:"paired_end"`
-	FileSegmentNumber    int    `json:"file_segment_number"`
-	QualityScale         string `json:"quality_scale"`
-	ExperimentalStrategy string `json:"experimental_strategy"`
-	ReferenceGenome      string `json:"reference_genome"`
-}
-
-type metadataCategorySample struct {
-	SampleID   string `json:"sample_id"`
-	SampleType string `json:"sample_type"`
-	SampleUUID string `json:"sample_uuid"`
-}
-
-type metadataCategoryAliquot struct {
-	AliquotID   string `json:"aliquot_id"`
-	AliquotUUID string `json:"aliquot_uuid"`
-}
-
-type metadataCategoryCase struct {
-	CaseID         string `json:"case_id"`
-	CaseUUID       string `json:"case_uuid"`
-	PrimarySite    string `json:"primary_site"`
-	DiseaseType    string `json:"disease_type"`
-	Gender         string `json:"gender"`
-	AgeAtDiagnosis uint   `json:"age_at_diagnosis"`
-	VitalStatus    string `json:"vital_status"`
-	DaysToDeath    uint   `json:"days_to_death"`
-	Race           string `json:"race"`
-	Ethnicity      string `json:"ethnicity"`
-}
-
-type metadataCategoryGeneral struct {
-	Investigation string `json:"investigation"`
+	Tags     []string               `json:"tags"`
+	Metadata map[string]interface{} `json:"metadata"`
 }
 
 // Files ...
@@ -122,4 +79,73 @@ func (c Client) StatFile(fileID string) (File, error) {
 	}
 
 	return file, nil
+}
+
+// UpdateFile ...
+func (c Client) UpdateFile(fileID string, updates []string) error {
+	for _, update := range updates {
+		encoded, isMetadata, err := updateStringToJSON(update)
+		if err != nil {
+			return fmt.Errorf("encoding update string to JSON failed: %s", err.Error())
+		}
+		u := mustParseURL(c.baseURL)
+		u.Path += fmt.Sprintf("files/%s/", fileID)
+		if isMetadata {
+			u.Path += "metadata/"
+		}
+		resp, err := c.request(http.MethodPatch, u, bytes.NewReader(encoded))
+		if err != nil {
+			return fmt.Errorf("updating file failed: %s", err)
+		}
+		defer resp.Close()
+	}
+
+	return nil
+}
+
+func updateStringToJSON(updateString string) ([]byte, bool, error) {
+	kv := strings.Split(updateString, "=")
+	if len(kv) != 2 {
+		return nil, false, fmt.Errorf("malformed update string")
+	}
+	key := kv[0]
+	val := kv[1]
+	isMetadata := strings.HasPrefix(key, "metadata.")
+	key = strings.TrimPrefix(key, "metadata.")
+
+	// value will be interface{} so json encoding will marshal it to a correct type
+	var value interface{}
+
+	// if the key is 'tags' we expect an array of strings
+	if key == "tags" {
+		value = strings.Split(val, ",")
+	}
+
+	// JSON values can be boolean, numbers, arrays (we only care about arrays of strings)
+	// or strings (we don't care about objects)
+
+	// try and parse out a boolean
+	b, err := strconv.ParseBool(val)
+	if err == nil {
+		value = b
+	}
+	// try and parse out a number
+	f, err := strconv.ParseFloat(val, 64)
+	if err == nil {
+		value = f
+	}
+	// if all else failed, we resort to a plain string (unless the actual string is 'null')
+	if val != "null" && value == nil {
+		value = val
+	}
+
+	toEncode := map[string]interface{}{
+		key: value,
+	}
+	buff := bytes.Buffer{}
+	if err := json.NewEncoder(&buff).Encode(toEncode); err != nil {
+		return nil, false, fmt.Errorf("encoding failed: %s", err)
+	}
+
+	return buff.Bytes(), isMetadata, nil
 }
