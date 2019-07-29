@@ -13,25 +13,29 @@ import (
 	"time"
 )
 
+type fileStorage struct {
+	Type     string `json:"type"`
+	Volume   string `json:"volume"`
+	Location string `json:"location"`
+}
+
+type fileOrigin struct {
+	Dataset string `json:"dataset"`
+}
+
 // File ...
 type File struct {
-	Project    string    `json:"project"`
-	Href       string    `json:"href"`
-	Name       string    `json:"name"`
-	ID         string    `json:"id"`
-	Size       int64     `json:"size"`
-	CreatedOn  time.Time `json:"created_on"`
-	ModifiedOn time.Time `json:"modified_on"`
-	Storage    struct {
-		Type     string `json:"type"`
-		Volume   string `json:"volume"`
-		Location string `json:"location"`
-	} `json:"storage"`
-	Origin struct {
-		Dataset string `json:"dataset"`
-	} `json:"origin"`
-	Tags     []string               `json:"tags"`
-	Metadata map[string]interface{} `json:"metadata"`
+	Project    string                 `json:"project"`
+	Href       string                 `json:"href"`
+	Name       string                 `json:"name"`
+	ID         string                 `json:"id"`
+	Size       int64                  `json:"size"`
+	CreatedOn  time.Time              `json:"created_on"`
+	ModifiedOn time.Time              `json:"modified_on"`
+	Storage    fileStorage            `json:"storage"`
+	Origin     fileOrigin             `json:"origin"`
+	Tags       []string               `json:"tags"`
+	Metadata   map[string]interface{} `json:"metadata"`
 }
 
 // Files ...
