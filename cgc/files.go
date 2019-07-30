@@ -46,22 +46,36 @@ func (c Client) Files(projectID string) ([]File, error) {
 	params.Add("project", projectID)
 	u.RawQuery = params.Encode()
 
-	resp, err := c.request(http.MethodGet, u, nil)
-	if err != nil {
-		return nil, fmt.Errorf("fetching files failed: %s", err.Error())
-	}
-	defer resp.Close()
+	files := make([]File, 0)
 
-	// TODO: paging
-	var r struct {
-		apiOKResponseTemplate
-		Items []File `json:"items"`
-	}
-	if err := json.NewDecoder(resp).Decode(&r); err != nil {
-		return nil, fmt.Errorf("unmarshalling response failed: %s", err.Error())
+	// if there's more files than returned by default by the API, links array will
+	// be provided. The object that has the 'rel' field with the value of 'next' will
+	// also contain the 'href' with the complete link to the next page.
+	for u != nil {
+		resp, err := c.request(http.MethodGet, u, nil)
+		if err != nil {
+			return nil, fmt.Errorf("fetching files failed: %s", err.Error())
+		}
+		defer resp.Close()
+
+		var r struct {
+			apiOKResponseTemplate
+			Files []File `json:"items"`
+		}
+		if err := json.NewDecoder(resp).Decode(&r); err != nil {
+			return nil, fmt.Errorf("unmarshalling response failed: %s", err.Error())
+		}
+		files = append(files, r.Files...)
+
+		u = nil
+		for _, link := range r.Links {
+			if link.Rel == "next" {
+				u = mustParseURL(link.Href)
+			}
+		}
 	}
 
-	return r.Items, nil
+	return files, nil
 }
 
 // StatFile gets the details of the file that has the ID of fileID.
