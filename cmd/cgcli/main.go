@@ -10,8 +10,8 @@ import (
 func main() {
 	app := cli.NewApp()
 	app.Name = "cgcli"
-	app.Usage = "cli tool for accessing CGC Public API"
-	app.Version = "0.0.1"
+	app.Usage = "CLI tool for accessing CGC Public API."
+	app.Version = "1.0.0"
 
 	app.Flags = []cli.Flag{tokenFlag}
 	app.Commands = []cli.Command{projectsCmd, filesCmd}
