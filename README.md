@@ -1,4 +1,4 @@
-# The Cancer Genomics Cloud command line tool
+# The [C]ancer [G]enomics [C]loud command [LI]ne tool
 ### Example
 ```
 $ cgcli --token {token} projects list
