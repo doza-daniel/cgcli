@@ -150,7 +150,10 @@ func (c Client) DownloadFile(fileID, dest string) error {
 		return fmt.Errorf("creating '%s' file failed: %s", dest, err.Error())
 	}
 
-	io.Copy(destf, file)
+	if _, err := io.Copy(destf, file); err != nil {
+		return fmt.Errorf("writing file to '%s' failed: %s", dest, err.Error())
+	}
+
 	if err := destf.Sync(); err != nil {
 		return fmt.Errorf("syncing '%s' file failed: %s", dest, err.Error())
 	}
