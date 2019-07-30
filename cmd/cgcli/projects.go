@@ -8,7 +8,8 @@ import (
 )
 
 var projectsListCmd = cli.Command{
-	Name: "list",
+	Name:  "list",
+	Usage: "Lists projects that belong to the user.",
 	Action: func(c *cli.Context) error {
 		client := cgc.New(c.GlobalString(tokenFlag.Name))
 
@@ -24,7 +25,10 @@ var projectsListCmd = cli.Command{
 		return nil
 	},
 }
-var projectsCmd = cli.Command{Name: "projects"}
+var projectsCmd = cli.Command{
+	Usage: "A set of commands for manipulating projects.",
+	Name:  "projects",
+}
 
 func init() {
 	projectsCmd.Subcommands = []cli.Command{

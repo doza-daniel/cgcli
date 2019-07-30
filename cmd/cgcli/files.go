@@ -9,10 +9,14 @@ import (
 	"github.com/urfave/cli"
 )
 
-var filesCmd = cli.Command{Name: "files"}
+var filesCmd = cli.Command{
+	Usage: "A set of commands for manipulating files.",
+	Name:  "files",
+}
 
 var filesListCmd = cli.Command{
-	Name: "list",
+	Name:  "list",
+	Usage: fmt.Sprintf("List files that belong under a project provided with '%s' flag.", projectFlag.Name),
 	Action: func(c *cli.Context) error {
 		token := c.GlobalString(tokenFlag.Name)
 		projectID := c.String(projectFlag.Name)
@@ -31,7 +35,9 @@ var filesListCmd = cli.Command{
 }
 
 var filesUpdateCmd = cli.Command{
-	Name: "update",
+	Name:      "update",
+	Usage:     fmt.Sprintf("Update file that's provided with '%s' flag.", fileFlag.Name),
+	UsageText: "Takes the arguments in format 'metadata.key=value' or 'key=value' and updates those fields in a file.",
 	Action: func(c *cli.Context) error {
 
 		token := c.GlobalString(tokenFlag.Name)
@@ -48,6 +54,10 @@ var filesUpdateCmd = cli.Command{
 
 var filesStatCmd = cli.Command{
 	Name: "stat",
+	Usage: fmt.Sprintf(
+		"Prints a JSON string representing information about a file provided with '%s' flag.",
+		fileFlag.Name,
+	),
 	Action: func(c *cli.Context) error {
 		token := c.GlobalString(tokenFlag.Name)
 		fileID := c.String(fileFlag.Name)
@@ -67,6 +77,10 @@ var filesStatCmd = cli.Command{
 }
 var filesDownloadCmd = cli.Command{
 	Name: "download",
+	Usage: fmt.Sprintf(
+		"Downloads a file to a destination on the system provided with '%s' flag.",
+		destFlag.Name,
+	),
 	Action: func(c *cli.Context) error {
 		token := c.GlobalString(tokenFlag.Name)
 		dest := c.String(destFlag.Name)
@@ -77,9 +91,18 @@ var filesDownloadCmd = cli.Command{
 	},
 }
 
-var projectFlag = cli.StringFlag{Name: "project"}
-var fileFlag = cli.StringFlag{Name: "file"}
-var destFlag = cli.StringFlag{Name: "dest"}
+var projectFlag = cli.StringFlag{
+	Usage: "represents the project ID",
+	Name:  "project",
+}
+var fileFlag = cli.StringFlag{
+	Usage: "represents the file ID",
+	Name:  "file",
+}
+var destFlag = cli.StringFlag{
+	Usage: "a path on a local system",
+	Name:  "dest",
+}
 
 func init() {
 	filesListCmd.Flags = []cli.Flag{projectFlag}
