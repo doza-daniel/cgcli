@@ -1,3 +1,4 @@
+// Package cgc provides a client that's used for accessing the CGC public API.
 package cgc
 
 import (
@@ -25,7 +26,9 @@ type apiOKResponseTemplate struct {
 	} `json:"links"`
 }
 
-// Client ...
+// Client struct is the client that is holding the necessary information used in every request made to
+// the CGC API (e.g. the token and the baseURL). Base URL is a field of this struct so the mocking process,
+// used when testing, is easier.
 type Client struct {
 	token      string
 	httpClient *http.Client
@@ -41,6 +44,10 @@ func New(token string) Client {
 	}
 }
 
+// request makes a HTTP request to provided url using a given method and body. This is a convenience
+// method that sets all the specific headers that are used in every request, like the authorization header.
+// Returns the response body if all went okay, else decodes the error message from the API and returns it as
+// an error.
 func (c Client) request(method string, u *url.URL, body io.Reader) (io.ReadCloser, error) {
 	req, err := http.NewRequest(method, u.String(), body)
 	if err != nil {

@@ -6,14 +6,14 @@ import (
 	"net/http"
 )
 
-// Project ...
+// Project struct represents the project information returned from CGC API.
 type Project struct {
 	Href string `json:"href"`
 	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
-// Projects ...
+// Projects lists all the projects that belong to the token holder.
 func (c Client) Projects() ([]Project, error) {
 	u := mustParseURL(c.baseURL)
 	u.Path += "projects"

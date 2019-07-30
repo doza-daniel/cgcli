@@ -23,7 +23,7 @@ type fileOrigin struct {
 	Dataset string `json:"dataset"`
 }
 
-// File ...
+// File struct represents the file information returned from CGC API.
 type File struct {
 	Project    string                 `json:"project"`
 	Href       string                 `json:"href"`
@@ -38,7 +38,7 @@ type File struct {
 	Metadata   map[string]interface{} `json:"metadata"`
 }
 
-// Files ...
+// Files lists all the files under the project with projectID.
 func (c Client) Files(projectID string) ([]File, error) {
 	u := mustParseURL(c.baseURL)
 	u.Path += "files"
@@ -64,7 +64,7 @@ func (c Client) Files(projectID string) ([]File, error) {
 	return r.Items, nil
 }
 
-// StatFile ...
+// StatFile gets the details of the file that has the ID of fileID.
 func (c Client) StatFile(fileID string) (File, error) {
 	u := mustParseURL(c.baseURL)
 	u.Path += fmt.Sprintf("files/%s", fileID)
@@ -82,7 +82,10 @@ func (c Client) StatFile(fileID string) (File, error) {
 	return file, nil
 }
 
-// UpdateFile ...
+// UpdateFile updates the file that has the ID of fileID. Updates slice represent strings with the format like
+// 'key=value' or 'metadata.key=value'. Every update string gets parsed, and a request to an appropriate endpoint is made.
+// If update string is used to update metadata, a PATCH request should be sent to 'files/{fileID}/metadata', else
+// 'files/{fileID}'.
 func (c Client) UpdateFile(fileID string, updates []string) error {
 	for _, update := range updates {
 		encoded, isMetadata, err := updateStringToJSON(update)
@@ -104,7 +107,8 @@ func (c Client) UpdateFile(fileID string, updates []string) error {
 	return nil
 }
 
-// DownloadFile ...
+// DownloadFile downloads a file that has the ID of fileID and writes it to dest location on the system. Two requests have
+// to be made in order to make this happen. First one get's the download URL, and the second one actually downloads the file.
 func (c Client) DownloadFile(fileID, dest string) error {
 	u := mustParseURL(c.baseURL)
 	u.Path += fmt.Sprintf("files/%s/download_info", fileID)
@@ -140,6 +144,8 @@ func (c Client) DownloadFile(fileID, dest string) error {
 	return nil
 }
 
+// updateStringToJSON parses a string in a format of 'key=value', 'metadata.key=value' and encodes it in JSON format.
+// Returns true if the string is prefixed with 'metadata.'.
 func updateStringToJSON(updateString string) ([]byte, bool, error) {
 	kv := strings.Split(updateString, "=")
 	if len(kv) != 2 {
